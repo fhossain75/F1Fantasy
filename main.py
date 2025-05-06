@@ -1,5 +1,5 @@
 import pandas as pd
-import itertools
+from coding_practice.algos import *
 
 # -- Load & Pre-process Data
 driver_points = pd.read_csv('./data/F1 Fantasy Driver Data - Points.csv')
@@ -15,8 +15,8 @@ constructors = constructor_points['Constructor']
 driver_points.drop('AVG', axis=1, inplace=True)
 driver_cost.drop('AVG', axis=1, inplace=True)
 
-constructor_points.drop('AVG', axis=1, inplace=True)
-constructor_cost.drop('AVG', axis=1, inplace=True)
+# constructor_points.drop('AVG', axis=1, inplace=True)
+# constructor_cost.drop('AVG', axis=1, inplace=True)
 
 # Format data from wide to long
 driver_points_long = driver_points.melt(id_vars='Driver', var_name='Race', value_name='Points')
@@ -36,30 +36,14 @@ constructor_data.dropna(inplace=True)
 driver_data['Race'] = driver_data['Race'].str.extract(r'(\d+)').astype(int)
 constructor_data['Race'] = constructor_data['Race'].str.extract(r'(\d+)').astype(int)
 
-# print(driver_data)
-# print(constructor_data)
+curr_race = max(constructor_data["Race"])
 
+# -- Generate Best Teams
+for race_number in range(1, curr_race + 1):
+    d_data = driver_data[driver_data["Race"] == race_number]
+    c_data = constructor_data[constructor_data["Race"] == race_number]
 
-constructor_combinations = list(itertools.combinations(constructors, 2))
-print(constructor_combinations)
+    result = best_team_memoization(c_data, d_data, len(d_data["Driver"].tolist()))
+    print(f"Race {race_number}: {result}")
 
-for combo in constructor_combinations:
-    constructor_set_cost = sum(
-        constructor_data.loc[constructor_data['Constructor'] == combo[0], 'Cost'],
-        constructor_data.loc[constructor_data['Constructor'] == combo[1], 'Cost'],
-    )
-"""
-
-max_points = knapsack_recursion(Points, Cost, Budget, len(Points))
-
-# For loop each race and filter
-
-# We'll brute-force all combinations of 2 or more constructors, and for each such combo:
-# Compute the remaining budget
-# Use DP or backtracking to pick the best 5-driver combination that fits in that remaining budget.
-
-# Find max possible points with budget and including constructor - classic knapsack
-def knapsack_recursion(points, cost, budget, n):
-
-"""
 
