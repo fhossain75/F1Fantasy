@@ -1,11 +1,11 @@
 import pandas as pd
-from coding_practice.algos import *
+from algo import *
 
 # -- Load & Pre-process Data
 driver_points = pd.read_csv('./data/F1 Fantasy Driver Data - Points.csv')
 driver_cost = pd.read_csv('./data/F1 Fantasy Driver Data - Price.csv')
 constructor_points = pd.read_csv('./data/F1 Fantasy Constructor Data - Points.csv')
-constructor_cost = pd.read_csv('./data/F1 Fantasy Constructor Data - Points.csv')
+constructor_cost = pd.read_csv('./data/F1 Fantasy Constructor Data - Price.csv')
 
 # Store drivers and constructor names
 drivers = driver_points['Driver']
@@ -45,5 +45,3 @@ for race_number in range(1, curr_race + 1):
 
     result = best_team_memoization(c_data, d_data, len(d_data["Driver"].tolist()))
     print(f"Race {race_number}: {result}")
-
-
