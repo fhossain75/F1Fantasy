@@ -25,7 +25,7 @@ def best_team_memoization(c_data, d_data, n, budget=config.budget_limit):
         total_points = constructors_points + drivers_points
 
         if total_points > best_points:
-            best_team = list(constructor_combo) + drivers
+            best_team = sorted(list(constructor_combo)) + sorted(drivers)
             best_points = total_points
 
     return best_team, float(best_points)
