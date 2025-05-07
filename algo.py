@@ -5,7 +5,6 @@ import config
 
 # Todo: add comments
 # Todo: create test cases
-# Todo: apply double chip
 # We'll brute-force all combinations of 2 or more constructors, and for each such combo:
 # Compute the remaining budget
 # Use DP or backtracking to pick the best 5-driver combination that fits in that remaining budget.
@@ -36,9 +35,9 @@ def drivers_memoization(driver_data, n, memo, budget, limit, chip_used):
     # Base Case - end of index or at capacity
     if n == 0 or budget == 0:
         if limit == 0:
-            return [], 0  # valid team of exactly 5 drivers
+            return [], 0 # valid team of exactly 5 drivers
         else:
-            return [], float('-inf')  # invalid team (not enough drivers)
+            return [], float('-inf') # invalid team (not enough drivers)
 
     # Optimization: Re-use calculation
     elif (n, budget, limit, chip_used) in memo:

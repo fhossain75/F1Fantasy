@@ -185,7 +185,7 @@ def drivers_memoization_limit(driver_data, budget, n, limit=5, memo=None):
 
     return memo[(n, budget)]
 
-# Todo: move team limit up or add team limit to config page
+
 # We'll brute-force all combinations of 2 or more constructors, and for each such combo:
 # Compute the remaining budget
 # Use DP or backtracking to pick the best 5-driver combination that fits in that remaining budget.
