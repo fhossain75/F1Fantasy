@@ -1,28 +1,47 @@
 # Find max possible points within cost budget - classic knapsack recursion
-from itertools import combinations
+from itertools import combinations, count
 import config
-
-
-# Todo: add comments
 # Todo: create test cases
+
+
 # We'll brute-force all combinations of 2 or more constructors, and for each such combo:
 # Compute the remaining budget
 # Use DP or backtracking to pick the best 5-driver combination that fits in that remaining budget.
+
 def best_team_memoization(c_data, d_data, n, budget=config.budget_limit):
+    """
+        Determines the F1 Fantasy team with the most points under a given budget by evaluating
+        all 2-constructor combinations and recursively selecting the optimal 5-driver team .
+
+        Args:
+            c_data (pd.DataFrame): Constructor data with columns ['Constructor', 'Cost', 'Points'].
+            d_data (pd.DataFrame): Driver data with columns ['Driver', 'Cost', 'Points'].
+            n (int): Number of drivers to consider.
+            budget (float): Total team budget limit.
+
+        Returns:
+            tuple:
+                - best_team (list): List of selected constructor and driver names.
+                - best_points (float): Total points for the best team combination.
+        """
     memo = {}
     best_team = []
     best_points = 0
 
     constructors = c_data["Constructor"].tolist()
 
+    # Try every pair of constructors
     for constructor_combo in combinations(constructors, 2):
 
+        # Sum up cost and points for the constructor pair
         constructors_cost = sum(c_data.loc[c_data['Constructor'] == c, 'Cost'].values[0] for c in constructor_combo)
         constructors_points = sum(c_data.loc[c_data['Constructor'] == c, 'Points'].values[0] for c in constructor_combo)
 
+        # Find the best driver combination under remaining budget after constructors
         drivers, drivers_points = drivers_memoization(d_data, n, memo, budget - constructors_cost, config.driver_limit, False)
         total_points = constructors_points + drivers_points
 
+        # Update best team if this combination scores higher
         if total_points > best_points:
             best_team = sorted(list(constructor_combo)) + sorted(drivers)
             best_points = total_points
