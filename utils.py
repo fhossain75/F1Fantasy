@@ -17,4 +17,8 @@ def preprocess_data(points_df, cost_df, id_col):
     data.dropna(inplace=True)
     data['Race'] = data['Race'].str.extract(r'(\d+)').astype(int)
 
+    # Ensure Points and Cost are floats
+    data['Points'] = data['Points'].astype(float)
+    data['Cost'] = data['Cost'].astype(float)
+
     return data
