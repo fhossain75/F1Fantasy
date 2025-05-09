@@ -1,12 +1,7 @@
-# Find max possible points within cost budget - classic knapsack recursion
 from itertools import combinations, count
 import config
 # Todo: create test cases
 
-
-# We'll brute-force all combinations of 2 or more constructors, and for each such combo:
-# Compute the remaining budget
-# Use DP or backtracking to pick the best 5-driver combination that fits in that remaining budget.
 
 def best_team_memoization(c_data, d_data, n, budget=config.budget_limit):
     """
@@ -24,14 +19,12 @@ def best_team_memoization(c_data, d_data, n, budget=config.budget_limit):
                 - best_team (list): List of selected constructor and driver names.
                 - best_points (float): Total points for the best team combination.
         """
+    # Init variables
     memo = {}
-    best_team = []
-    best_points = 0
-
-    constructors = c_data["Constructor"].tolist()
+    best_team, best_points = [], 0
 
     # Try every pair of constructors
-    for constructor_combo in combinations(constructors, 2):
+    for constructor_combo in combinations(c_data["Constructor"].tolist(), 2):
 
         # Sum up cost and points for the constructor pair
         constructors_cost = sum(c_data.loc[c_data['Constructor'] == c, 'Cost'].values[0] for c in constructor_combo)
@@ -50,25 +43,41 @@ def best_team_memoization(c_data, d_data, n, budget=config.budget_limit):
 
 
 def drivers_memoization(driver_data, n, memo, budget, limit, chip_used):
+    """
+    Dynamic programming function to select the highest-scoring set of drivers within a budget,
+    and the best driver to have the 2x DRS chip.
 
-    # Base Case - end of index or at capacity
+    Args:
+        driver_data (pd.DataFrame): Driver data with columns ['Driver', 'Cost', 'Points'].
+        n (int): Number of drivers left to consider.
+        memo (dict): Memoization dictionary to cache computed subproblems.
+        budget (float): Remaining budget.
+        limit (int): Number of drivers still needed to complete the team.
+        chip_used (bool): Whether the DRS chip has already been used.
+
+    Returns:
+        tuple:
+            - team (list): Selected driver names (with "_DRS" suffix if chip applied).
+            - points (float): Total points earned by the selected team.
+    """
+    # Base cases: no drivers or budget left
     if n == 0 or budget == 0:
         if limit == 0:
             return [], 0 # valid team of exactly 5 drivers
         else:
             return [], float('-inf') # invalid team (not enough drivers)
 
-    # Optimization: Re-use calculation
+    # Optimization: Re-use cached result if already computed
     elif (n, budget, limit, chip_used) in memo:
         return memo[(n, budget, limit, chip_used)]
 
-    # Init variables
+    # Get current driver data
     index = n - 1
     points = driver_data["Points"].values[index]
     cost = driver_data["Cost"].values[index]
     driver = driver_data["Driver"].values[index]
 
-    # Optimization: Skip if current driver is over budget
+    # Optimization: If over budget, skip current driver
     if cost > budget:
         memo[(n, budget, limit, chip_used)] = drivers_memoization(driver_data, index, memo, budget, limit, chip_used)
         return memo[(n, budget, limit, chip_used)]
@@ -78,7 +87,7 @@ def drivers_memoization(driver_data, n, memo, budget, limit, chip_used):
     include_team = sub_team + [driver]
     include_points = sub_points + points
 
-    # Choice 2 - Include w 2x DRS Chip (only if not used yet):
+    # Choice 2 - Include w 2x DRS Chip (if not used yet):
     if not chip_used:
         chip_sub_team, chip_sub_points = drivers_memoization(driver_data, index, memo, budget - cost, limit - 1, True)
         chip_team = chip_sub_team + [driver + "_DRS"]
@@ -90,7 +99,7 @@ def drivers_memoization(driver_data, n, memo, budget, limit, chip_used):
     # Choice 3 - Exclude
     exclude_team, exclude_points = drivers_memoization(driver_data, index, memo, budget, limit, chip_used)
 
-    # Eval sub-problem
+    # Eval subproblem: Take the option with the higher score
     if include_points > exclude_points:
         memo[(n, budget, limit, chip_used)] = include_team, include_points
     else:
