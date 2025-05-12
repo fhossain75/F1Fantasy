@@ -1,7 +1,10 @@
+import ast
+import os
+
 import pandas as pd
 
 
-def load_data():
+def load_data(root_dir):
     """
     Loads F1 Fantasy data from CSV files.
 
@@ -12,10 +15,10 @@ def load_data():
             - constructor_points: Points data for constructors
             - constructor_cost: Cost data for constructors
     """
-    driver_points = pd.read_csv('./data/F1 Fantasy Driver Data - Points.csv')
-    driver_cost = pd.read_csv('./data/F1 Fantasy Driver Data - Price.csv')
-    constructor_points = pd.read_csv('./data/F1 Fantasy Constructor Data - Points.csv')
-    constructor_cost = pd.read_csv('./data/F1 Fantasy Constructor Data - Price.csv')
+    driver_points = pd.read_csv(os.path.join(root_dir, 'F1 Fantasy Driver Data - Points.csv'))
+    driver_cost = pd.read_csv(os.path.join(root_dir, 'F1 Fantasy Driver Data - Price.csv'))
+    constructor_points = pd.read_csv(os.path.join(root_dir, 'F1 Fantasy Constructor Data - Points.csv'))
+    constructor_cost = pd.read_csv(os.path.join(root_dir, 'F1 Fantasy Constructor Data - Price.csv'))
     return driver_points, driver_cost, constructor_points, constructor_cost
 
 def preprocess_data(points_df, cost_df, id_col):
@@ -45,3 +48,42 @@ def preprocess_data(points_df, cost_df, id_col):
     data['Cost'] = data['Cost'].astype(float)
 
     return data
+
+# TODO: include chips into total (3x, No negatives)
+def calculate_personal_team(root_dir):
+    """
+    """
+    # Load Data
+    driver_points, driver_cost, constructor_points, constructor_cost = load_data(root_dir)
+    personal_team_df = pd.read_csv(os.path.join(root_dir, 'Faisal Teams.csv'))
+
+    # Pre-process Data
+    d_data = preprocess_data(driver_points, driver_cost, 'Driver')
+    c_data = preprocess_data(constructor_points, constructor_cost, 'Constructor')
+
+    # Calculate total points
+    results = []
+    for _, row in personal_team_df.iterrows():
+
+        # Init curr variables
+        race = row["Race"]
+        constructors = ast.literal_eval(row["Constructors"])
+        drivers = ast.literal_eval(row["Drivers"])
+        drs_driver = str(row["2xDRS"])
+
+        # Get matching drivers and constructors for this race
+        race_driver_data = d_data[(d_data["Race"] == race) & (d_data["Driver"].isin(drivers))]
+        race_constructor_data = c_data[(c_data["Race"] == race) & (c_data["Constructor"].isin(constructors))]
+
+        # Apply 2x multiplier on DRS driver
+        race_driver_data.loc[(race_driver_data["Driver"] == drs_driver), "Points"] *= 2
+
+        results.append({
+            "Race": race,
+            "Constructors": constructors,
+            "Drivers": drivers,
+            "2xDRS": drs_driver,
+            "Total Points": race_driver_data["Points"].sum() + race_constructor_data["Points"].sum()
+        })
+
+    return pd.DataFrame(results)
