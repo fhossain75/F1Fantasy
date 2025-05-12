@@ -1,2 +1,7 @@
-Race,Constructors,Drivers
-1, [], []
+Race,Constructors,Drivers,2xDRS
+1,"['WIL','KCK']","['NOR','PIA','SAI','ALO','HAD']",NOR
+2,"['MCL','KCK']","['NOR','BOR','SAI','ALO','HAD']",NOR
+3,"['MCL','KCK']","['NOR','BOR','STR','OCO','HAD']",NOR
+4,"['MCL','VRB']","['NOR','BOR','STR','OCO','HAD']",NOR
+5,"['MCL','VRB']","['NOR','BOR','STR','OCO','HAD']",NOR
+6,"['MCL','VRB']","['NOR','BOR','STR','OCO','HAD']",NOR
