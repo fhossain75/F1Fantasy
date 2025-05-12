@@ -99,7 +99,7 @@ def drivers_memoization(driver_data, n, memo, budget, limit, chip_used):
     # Choice 3 - Exclude
     exclude_team, exclude_points = drivers_memoization(driver_data, index, memo, budget, limit, chip_used)
 
-    # Eval subproblem: Take the option with the higher score
+    # Evaluate subproblem: Take the option with the higher score
     if include_points > exclude_points:
         memo[(n, budget, limit, chip_used)] = include_team, include_points
     else:
