@@ -1,65 +1,34 @@
-import pandas as pd
-import itertools
+from algo import *
+from utils import *
+from tqdm import tqdm
 
-# -- Load & Pre-process Data
-driver_points = pd.read_csv('./data/F1 Fantasy Driver Data - Points.csv')
-driver_cost = pd.read_csv('./data/F1 Fantasy Driver Data - Price.csv')
-constructor_points = pd.read_csv('./data/F1 Fantasy Constructor Data - Points.csv')
-constructor_cost = pd.read_csv('./data/F1 Fantasy Constructor Data - Points.csv')
+def main(root_dir):
+    # Load Data
+    driver_points, driver_cost, constructor_points, constructor_cost = load_data(root_dir)
 
-# Store drivers and constructor names
-drivers = driver_points['Driver']
-constructors = constructor_points['Constructor']
+    # Pre-process Data
+    driver_data = preprocess_data(driver_points, driver_cost, 'Driver')
+    constructor_data = preprocess_data(constructor_points, constructor_cost, 'Constructor')
 
-# Remove irrelevant data
-driver_points.drop('AVG', axis=1, inplace=True)
-driver_cost.drop('AVG', axis=1, inplace=True)
+    # -- Generate Best Teams
+    results = []
+    current_race_number = max(constructor_data["Race"])
+    for race_number in tqdm(range(1, current_race_number + 1), desc="Optimizing Races"):
 
-constructor_points.drop('AVG', axis=1, inplace=True)
-constructor_cost.drop('AVG', axis=1, inplace=True)
+        # Filter data by race
+        d_data = driver_data[driver_data["Race"] == race_number]
+        c_data = constructor_data[constructor_data["Race"] == race_number]
 
-# Format data from wide to long
-driver_points_long = driver_points.melt(id_vars='Driver', var_name='Race', value_name='Points')
-driver_cost_long = driver_cost.melt(id_vars='Driver', var_name='Race', value_name='Cost')
+        n = len(d_data["Driver"].tolist())
+        team, points = best_team_memoization(c_data, d_data, n)
 
-constructor_points_long = constructor_points.melt(id_vars='Constructor', var_name='Race', value_name='Points')
-constructor_cost_long = constructor_cost.melt(id_vars='Constructor', var_name='Race', value_name='Cost')
+        results.append({
+            "Race": race_number,
+            "Team": team,
+            "Total Points": points
+        })
 
-# Denormalize Data
-driver_data = pd.merge(driver_points_long, driver_cost_long, on=['Driver', 'Race'])
-driver_data.dropna(inplace=True)
+    return pd.DataFrame(results)
 
-constructor_data = pd.merge(constructor_points_long, constructor_cost_long, on=['Constructor', 'Race'])
-constructor_data.dropna(inplace=True)
-
-# Clean Race names ("Race 1" -> 1)
-driver_data['Race'] = driver_data['Race'].str.extract(r'(\d+)').astype(int)
-constructor_data['Race'] = constructor_data['Race'].str.extract(r'(\d+)').astype(int)
-
-# print(driver_data)
-# print(constructor_data)
-
-
-constructor_combinations = list(itertools.combinations(constructors, 2))
-print(constructor_combinations)
-
-for combo in constructor_combinations:
-    constructor_set_cost = sum(
-        constructor_data.loc[constructor_data['Constructor'] == combo[0], 'Cost'],
-        constructor_data.loc[constructor_data['Constructor'] == combo[1], 'Cost'],
-    )
-"""
-
-max_points = knapsack_recursion(Points, Cost, Budget, len(Points))
-
-# For loop each race and filter
-
-# We'll brute-force all combinations of 2 or more constructors, and for each such combo:
-# Compute the remaining budget
-# Use DP or backtracking to pick the best 5-driver combination that fits in that remaining budget.
-
-# Find max possible points with budget and including constructor - classic knapsack
-def knapsack_recursion(points, cost, budget, n):
-
-"""
-
+# if __name__ == "__main__":
+#     print(main("./data"))
