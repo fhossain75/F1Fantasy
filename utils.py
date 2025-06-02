@@ -87,3 +87,37 @@ def calculate_personal_team(root_dir):
         })
 
     return pd.DataFrame(results)
+
+def simulate_custom_team(root_dir, constructors, drivers, drs_driver):
+    """
+    Auto apply 2x DRS chip to top driver
+    #todo: add column of budget_deficit
+    """
+    # Load Data
+    driver_points, driver_cost, constructor_points, constructor_cost = load_data(root_dir)
+
+    # Pre-process Data
+    d_data = preprocess_data(driver_points, driver_cost, 'Driver')
+    c_data = preprocess_data(constructor_points, constructor_cost, 'Constructor')
+
+    # Calculate total points
+    #TODO: Might be quicker if store points in df and do sum table operation
+    results = []
+    for race in range(1, len(driver_points.columns)):
+
+        # Get matching drivers and constructors for this race
+        race_driver_data = d_data[(d_data["Race"] == race) & (d_data["Driver"].isin(drivers))]
+        race_constructor_data = c_data[(c_data["Race"] == race) & (c_data["Constructor"].isin(constructors))]
+
+        # Apply 2x multiplier on DRS driver
+        race_driver_data.loc[(race_driver_data["Driver"] == drs_driver), "Points"] *= 2
+
+        results.append({
+            "Race": race,
+            "Constructors": constructors,
+            "Drivers": drivers,
+            "2xDRS": drs_driver,
+            "Total Points": race_driver_data["Points"].sum() + race_constructor_data["Points"].sum()
+        })
+
+    return pd.DataFrame(results)
